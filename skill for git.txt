@@ -1,0 +1,166 @@
+好的，给你一套**最简化的日常命令**，以后每天只需要记住几行代码。
+
+---
+
+## 一、首次设置（只需做一次）
+
+```powershell
+# 1. 进入你的文件夹
+cd E:\my_daily_push
+
+# 2. 初始化 Git（如果还没做）
+git init
+
+# 3. 连接远程仓库
+git remote add origin https://github.com/swordyan/yang.git
+
+# 4. 拉取远程内容（首次需要）
+git pull origin master --allow-unrelated-histories --no-edit
+```
+
+---
+
+## 二、每天上传文件到 GitHub（上传）
+
+### 步骤：
+```powershell
+# 1. 进入文件夹
+cd E:\my_daily_push
+
+# 2. 拉取最新内容（避免冲突）
+git pull origin master --no-edit
+
+# 3. 添加所有文件（新增、修改、删除都包括）
+git add .
+
+# 4. 提交并写上备注
+git commit -m "上传文件 $(Get-Date -Format 'HH:mm')"
+
+# 5. 推送到 GitHub
+git push origin master
+```
+
+### 简化版（复制粘贴直接运行）：
+```powershell
+cd E:\my_daily_push && git pull origin master --no-edit && git add . && git commit -m "upload $(Get-Date -Format 'HH:mm')" && git push origin master
+```
+
+---
+
+## 三、从 GitHub 下载文件到电脑（下载）
+
+### 场景1：第一次在新电脑上获取所有文件
+```powershell
+# 直接克隆整个仓库
+git clone https://github.com/swordyan/yang.git E:\my_daily_push
+```
+
+### 场景2：已有文件夹，只想更新到最新
+```powershell
+# 1. 进入文件夹
+cd E:\my_daily_push
+
+# 2. 拉取最新内容
+git pull origin master --no-edit
+```
+
+### 场景3：强制覆盖本地文件（放弃本地修改）
+```powershell
+cd E:\my_daily_push
+git fetch origin master
+git reset --hard origin/master
+```
+
+---
+
+## 四、常用命令速查表
+
+| 你想做什么 | 输入什么 |
+|-----------|----------|
+| **上传** | `cd E:\my_daily_push && git add . && git commit -m "更新" && git push` |
+| **下载** | `cd E:\my_daily_push && git pull` |
+| **查看状态** | `cd E:\my_daily_push && git status` |
+| **查看历史** | `cd E:\my_daily_push && git log --oneline -5` |
+| **查看远程地址** | `cd E:\my_daily_push && git remote -v` |
+
+---
+
+## 五、最精简版（每天只用记2条）
+
+### 上传：
+```powershell
+cd E:\my_daily_push && git add . && git commit -m "up" && git push
+```
+
+### 下载：
+```powershell
+cd E:\my_daily_push && git pull
+```
+
+---
+
+## 六、给新手的小抄（可以保存到桌面）
+
+创建一个文本文件 `git命令.txt` 放在桌面，内容：
+
+```
+=== 每天上传 ===
+cd E:\my_daily_push && git add . && git commit -m "更新" && git push
+
+=== 每天下载 ===
+cd E:\my_daily_push && git pull
+
+=== 查看状态 ===
+cd E:\my_daily_push && git status
+```
+
+---
+
+## 七、常见问题处理
+
+### 问题1：提示 "Please enter a commit message"
+- 按 `Esc`，然后输入 `:wq` 回车
+
+### 问题2：提示 "rejected" 推送失败
+```powershell
+cd E:\my_daily_push
+git pull origin master --no-edit
+git push origin master
+```
+
+### 问题3：提示 "Permission denied"
+- 需要先配置 Git 用户信息：
+```powershell
+git config --global user.name "swordyan"
+git config --global user.email "你的邮箱"
+```
+
+### 问题4：冲突提示 "CONFLICT"
+```powershell
+# 放弃本地修改，强制用远程的
+git fetch origin master
+git reset --hard origin/master
+```
+
+---
+
+## 八、不同电脑同步工作流
+
+| 时间 | 家里电脑 | 单位电脑 |
+|------|----------|----------|
+| 早上到单位 | 运行 `git pull` 下载昨晚家里上传的 |
+| 单位修改文件 | 下班前运行 `git add . && git commit -m "单位修改" && git push` |
+| 晚上回家 | 运行 `git pull` 下载单位上传的 |
+| 家里修改文件 | 睡觉前运行 `git add . && git commit -m "家里修改" && git push` |
+
+---
+
+**把这几个命令记在手机备忘录里，以后每天复制粘贴就行：**
+
+```
+上传：cd E:\my_daily_push && git add . && git commit -m "up" && git push
+
+下载：cd E:\my_daily_push && git pull
+```
+
+需要我帮你调整文件夹路径吗？如果你换了文件夹，只需要把命令里的 `E:\my_daily_push` 换成新路径就行。

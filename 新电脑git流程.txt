@@ -1,0 +1,158 @@
+新电脑上设置定时上传，操作和家里电脑**几乎一样**，只需要把文件夹路径改成新电脑上的位置即可。
+
+---
+
+## 新电脑定时上传完整步骤
+
+### 第一步：首次设置（只需做一次）
+
+```powershell
+# 1. 克隆你的仓库到新电脑（假设放在 E 盘）
+cd E:\
+git clone https://github.com/swordyan/yang.git my_daily_push
+
+# 2. 进入文件夹
+cd E:\my_daily_push
+
+# 3. 验证一下文件是否都下来了
+dir
+```
+
+### 第二步：创建自动推送脚本
+
+```powershell
+# 创建脚本文件（路径改成你新电脑上的实际路径）
+@"
+cd E:\my_daily_push
+git pull origin master --no-edit
+git add .
+git commit -m "auto update from office at `$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+git push origin master
+"@ | Out-File -FilePath "E:\my_daily_push\auto_push.ps1" -Encoding utf8 -Force
+```
+
+### 第三步：创建定时任务（以管理员身份运行 PowerShell）
+
+```powershell
+# 设置定时任务，每天 18:00 运行（下班前）
+$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File `"E:\my_daily_push\auto_push.ps1`" -NoProfile -ExecutionPolicy Bypass"
+$trigger = New-ScheduledTaskTrigger -Daily -At 18:00
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERNAME" -LogonType Interactive
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -TaskName "GitPushDaily" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
+
+# 验证任务创建成功
+Get-ScheduledTask -TaskName "GitPushDaily"
+```
+
+---
+
+## 两台电脑的时间安排建议
+
+| 电脑 | 文件夹路径 | 推荐定时时间 | 说明 |
+|------|-----------|-------------|------|
+| 家里电脑 | `E:\my_daily_push` | **20:00** | 晚上修改完后自动上传 |
+| 单位电脑 | `E:\my_daily_push` | **18:00** | 下班前自动上传 |
+
+---
+
+## 完整的单位电脑设置命令（复制即用）
+
+**以管理员身份打开 PowerShell，一次性执行：**
+
+```powershell
+# ========== 第一次设置（只需执行一次）==========
+# 1. 克隆仓库
+cd E:\
+git clone https://github.com/swordyan/yang.git my_daily_push
+
+# 2. 创建自动推送脚本
+@"
+cd E:\my_daily_push
+git pull origin master --no-edit
+git add .
+git commit -m "office update at `$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+git push origin master
+"@ | Out-File -FilePath "E:\my_daily_push\auto_push.ps1" -Encoding utf8 -Force
+
+# 3. 允许执行脚本
+Set-ExecutionPolicy RemoteSigned -Force
+
+# 4. 创建定时任务（每天18:00）
+$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File `"E:\my_daily_push\auto_push.ps1`" -NoProfile -ExecutionPolicy Bypass"
+$trigger = New-ScheduledTaskTrigger -Daily -At 18:00
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERNAME" -LogonType Interactive
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -TaskName "GitPushDaily" -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
+
+Write-Host "设置完成！" -ForegroundColor Green
+```
+
+---
+
+## 日常使用流程
+
+### 单位电脑（自动）
+- 每天 18:00 自动把 `E:\my_daily_push` 里所有文件推送到 GitHub
+- 你只需要正常编辑文件即可，不用管命令
+
+### 家里电脑（自动）
+- 每天 20:00 自动推送
+- 同样不用管命令
+
+### 首次开机或更换文件夹后
+手动运行一次测试：
+```powershell
+# 测试脚本是否正常
+E:\my_daily_push\auto_push.ps1
+
+# 查看定时任务状态
+Get-ScheduledTask -TaskName "GitPushDaily" | Get-ScheduledTaskInfo
+```
+
+---
+
+## 可能遇到的问题
+
+### 问题1：提示 "git 不是内部或外部命令"
+- 说明新电脑没装 Git，先去 https://git-scm.com/downloads 下载安装
+
+### 问题2：提示 "fatal: not a git repository"
+- 说明没有成功克隆仓库，手动执行：
+```powershell
+cd E:\
+git clone https://github.com/swordyan/yang.git my_daily_push
+```
+
+### 问题3：提示 "Permission denied" 或登录失败
+- 需要配置 Git 用户信息：
+```powershell
+git config --global user.name "swordyan"
+git config --global user.email "你的注册邮箱"
+```
+
+### 问题4：定时任务没运行
+- 检查电脑是否关机/睡眠
+- 查看任务状态：
+```powershell
+Get-ScheduledTask -TaskName "GitPushDaily" | Get-ScheduledTaskInfo
+```
+- 手动运行测试：
+```powershell
+Start-ScheduledTask -TaskName "GitPushDaily"
+```
+
+---
+
+## 总结
+
+**新电脑只需要做三件事：**
+1. 装 Git
+2. 执行上面"完整的单位电脑设置命令"
+3. 正常使用，每天 18:00 自动上传
+
+**之后你每天的节奏：**
+- 在单位修改文件 → 18:00 自动上传 → 回家
+- 在家打开电脑 → 文件自动下载（？）
+
+等等，家里电脑**每天自动下载**需要吗？如果需要，我也可以帮你设置一个早上 9 点的 `git pull` 定时任务。
